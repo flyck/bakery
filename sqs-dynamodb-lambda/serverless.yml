@@ -1,0 +1,60 @@
+service: bakery-sqs-dynamodb
+
+frameworkVersion: "3"
+
+custom:
+  name: bakery-sqs-dynamodb
+
+package:
+  artifact: bundle.zip
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: provided.al2
+  architecture: arm64
+
+  stackTags:
+    repository: https://github.com/flyck/bakery
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:*:*:table/${self:custom.name}
+
+plugins:
+  - serverless-offline
+
+functions:
+  ingestion:
+    handler: bundle.handler
+    layers:
+      - 'arn:aws:lambda:eu-central-1:304046647655:layer:bun:1'
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - Queue
+              - Arn
+resources:
+  Resources:
+    Queue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: "${self:custom.name}"
+    Table:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "N"
+        KeySchema:
+          -
+            AttributeName: "id"
+            KeyType: "HASH"
+        TableName: "${self:custom.name}"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
