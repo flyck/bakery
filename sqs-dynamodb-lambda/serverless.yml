@@ -30,7 +30,7 @@ functions:
   ingestion:
     handler: bundle.handler
     layers:
-      - 'arn:aws:lambda:eu-central-1:304046647655:layer:bun:3'
+      - 'arn:aws:lambda:eu-central-1:304046647655:layer:bun:1'
     environment:
       TABLE_NAME: ${self:custom.name}
     events:
