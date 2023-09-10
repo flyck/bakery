@@ -1,0 +1,20 @@
+{
+  "name": "hono-api",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile bundle --target bun; zip bundle.zip bundle",
+    "deploy": "sls deploy --stage dev"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "hono": "^3.5.8",
+    "serverless": "^3.34.0",
+    "serverless-offline": "^12.0.4"
+  }
+}

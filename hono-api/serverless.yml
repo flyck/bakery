@@ -1,0 +1,29 @@
+service: bakery-hono-api
+
+frameworkVersion: "3"
+
+package:
+  artifact: bundle.zip
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: provided.al2
+  architecture: arm64
+
+  httpApi:
+    cors: true
+
+  stackTags:
+    repository: https://github.com/flyck/bakery
+
+plugins:
+  - serverless-offline
+
+functions:
+  api:
+    handler: bundle.handler
+    layers:
+      - 'arn:aws:lambda:eu-central-1:304046647655:layer:bun:1'
+    events:
+      - httpApi: '*'
