@@ -18,11 +18,10 @@ This project was created using `bun init` in bun v1.0.0. [Bun](https://bun.sh) i
 
 - ✅ works in local test
 - ✅ works in lambda
-  - issues with newest bun lambda layer
-  - after completion gives:
-    ```bash
+  - lambda layer gives after completion:
+```bash
 616 |       throw new Error("fetch() did not return a Response");
                 ^
 error: fetch() did not return a Response
       at /opt/runtime.ts:616:12
-    ```
+```
