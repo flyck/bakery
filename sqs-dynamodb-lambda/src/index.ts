@@ -1,39 +1,32 @@
 import { DynamoDB } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { SQSEvent } from "aws-lambda"
-import { z } from "zod";
+import { defaultProvider } from "@aws-sdk/credential-provider-node"
+import { DynamoDbItem, messageItems } from "./types"
+
 // doesnt build 👇 https://github.com/oven-sh/bun/issues?q=is%3Aissue+is%3Aopen+child_process
 // import { fromNodeProviderChain } from "@aws-sdk/credential-providers"
 
-// doesnt build but works in test 👇 https://github.com/oven-sh/bun/issues?q=is%3Aissue+is%3Aopen+child_process
-import { defaultProvider } from "@aws-sdk/credential-provider-node"
-
-
-// ✅ builds and works in lambda runtime
-// import { fromEnv } from "@aws-sdk/credential-provider-env"
-
-
-
 const table = process.env["TABLE_NAME"]
-
-const messageItem = z.object({
-  id: z.optional(z.number()),
-  name: z.string(),
-}).array();
-
-type DynamoDbItem = z.infer<typeof dynamoDbItem>
-const dynamoDbItem = z.object({
-  id: z.number(),
-  name: z.string(),
-});
-
 
 async function handler(event: SQSEvent) {
   console.info("Received Events: ", JSON.stringify(event))
 
+  // work-around for something weird the bun lambda layer does currently
+  const bunEvent = event as unknown as any
+  if (bunEvent["aws"] != undefined) {
+    console.info("unpacking aws event in runtime...")
+    event = bunEvent["aws"]
+  }
+
   let items: DynamoDbItem[] = []
   event.Records.forEach((record) => {
-    const message = messageItem.parse(JSON.parse(record.body))
+    let message: messageItems
+    try {
+      message = messageItems.parse(JSON.parse(record.body))
+    } catch (err) {
+      throw new Error("Couldnt parse message payload: " + err)
+    }
 
     message.forEach((item) => {
       if (!item.id) {
@@ -63,7 +56,6 @@ async function save(items: DynamoDbItem[]) {
     credentials: defaultProvider()
   })
   const docClient = DynamoDBDocumentClient.from(client)
-
 
   console.info("Adding items to table...")
 
